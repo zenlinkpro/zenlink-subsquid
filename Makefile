@@ -23,7 +23,15 @@ codegen:
 
 
 typegen:
-	@npx squid-substrate-typegen typegen.json
+	@make explore
+	@npx squid-substrate-typegen ./typegen/typegen.json
+
+
+explore:
+	@npx squid-substrate-metadata-explorer \
+		--chain wss://wss.api.moonriver.moonbeam.network \
+		--archive https://moonriver.archive.subsquid.io/graphql \
+		--out ./typegen/versions.jsonl
 
 
 up:
