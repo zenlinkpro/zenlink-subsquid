@@ -11,7 +11,7 @@ import { handleBurn, handleMint, handleSwap, handleSync, handleTransfer } from "
 const database = new TypeormDatabase()
 const processor = new SubstrateBatchProcessor()
   .setBatchSize(100)
-  .setBlockRange({ from: 1424627 })
+  .setBlockRange({ from: 1424626 })
   .setDataSource({
     chain: CHAIN_NODE,
     archive: lookupArchive('astar', { release: "FireSquid" })
@@ -45,12 +45,20 @@ processor.run(database, async (ctx) => {
 
 const knownPairContracts: Set<string> = new Set()
 
+async function tryIsPairInvolved(store: Store, address: string) {
+  try {
+    return (await store.countBy(Pair, { id: address })) > 0
+  } catch {
+    return false
+  }
+}
+
 async function isKnownPairContracts(store: Store, address: string) {
   const normalizedAddress = address.toLowerCase()
   if (knownPairContracts.has(normalizedAddress)) {
     return true
   }
-  if ((await store.countBy(Pair, { id: normalizedAddress })) > 0) {
+  if (await tryIsPairInvolved(store, normalizedAddress)) {
     knownPairContracts.add(normalizedAddress)
     return true
   }

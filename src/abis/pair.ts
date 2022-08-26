@@ -73,9 +73,13 @@ export const events = {
   ,
 }
 
-export type Approve0Function = ([spender: string, value: ethers.BigNumber] & {spender: string, value: ethers.BigNumber})
+export type Approve0Function = ([spender: string, amount: ethers.BigNumber] & {spender: string, amount: ethers.BigNumber})
 
 export type Burn0Function = ([to: string] & {to: string})
+
+export type DecreaseAllowance0Function = ([spender: string, subtractedValue: ethers.BigNumber] & {spender: string, subtractedValue: ethers.BigNumber})
+
+export type IncreaseAllowance0Function = ([spender: string, addedValue: ethers.BigNumber] & {spender: string, addedValue: ethers.BigNumber})
 
 export type Initialize0Function = ([_token0: string, _token1: string] & {_token0: string, _token1: string})
 
@@ -87,9 +91,9 @@ export type Skim0Function = ([to: string] & {to: string})
 
 export type Swap0Function = ([amount0Out: ethers.BigNumber, amount1Out: ethers.BigNumber, to: string, data: string] & {amount0Out: ethers.BigNumber, amount1Out: ethers.BigNumber, to: string, data: string})
 
-export type Transfer0Function = ([to: string, value: ethers.BigNumber] & {to: string, value: ethers.BigNumber})
+export type Transfer0Function = ([to: string, amount: ethers.BigNumber] & {to: string, amount: ethers.BigNumber})
 
-export type TransferFrom0Function = ([from: string, to: string, value: ethers.BigNumber] & {from: string, to: string, value: ethers.BigNumber})
+export type TransferFrom0Function = ([from: string, to: string, amount: ethers.BigNumber] & {from: string, to: string, amount: ethers.BigNumber})
 
 
 function decodeFunction(data: string): any {
@@ -107,6 +111,20 @@ export const functions = {
   "burn(address)": {
     sighash: abi.getSighash("burn(address)"),
     decode(input: string): Burn0Function {
+      return decodeFunction(input)
+    }
+  }
+  ,
+  "decreaseAllowance(address,uint256)": {
+    sighash: abi.getSighash("decreaseAllowance(address,uint256)"),
+    decode(input: string): DecreaseAllowance0Function {
+      return decodeFunction(input)
+    }
+  }
+  ,
+  "increaseAllowance(address,uint256)": {
+    sighash: abi.getSighash("increaseAllowance(address,uint256)"),
+    decode(input: string): IncreaseAllowance0Function {
       return decodeFunction(input)
     }
   }
@@ -187,9 +205,7 @@ interface Chain  {
 
 export class Contract  {
   private readonly _chain: Chain
-
   private readonly blockHeight: number
-
   readonly address: string
 
   constructor(ctx: BlockContext, address: string)
@@ -219,12 +235,12 @@ export class Contract  {
     return this.call("PERMIT_TYPEHASH", [])
   }
 
-  async allowance(addressA: string, addressB: string): Promise<ethers.BigNumber> {
-    return this.call("allowance", [addressA, addressB])
+  async allowance(owner: string, spender: string): Promise<ethers.BigNumber> {
+    return this.call("allowance", [owner, spender])
   }
 
-  async balanceOf(param: string): Promise<ethers.BigNumber> {
-    return this.call("balanceOf", [param])
+  async balanceOf(account: string): Promise<ethers.BigNumber> {
+    return this.call("balanceOf", [account])
   }
 
   async decimals(): Promise<number> {
@@ -247,8 +263,8 @@ export class Contract  {
     return this.call("name", [])
   }
 
-  async nonces(param: string): Promise<ethers.BigNumber> {
-    return this.call("nonces", [param])
+  async nonces(arg0: string): Promise<ethers.BigNumber> {
+    return this.call("nonces", [arg0])
   }
 
   async price0CumulativeLast(): Promise<ethers.BigNumber> {
@@ -288,7 +304,6 @@ function getJsonAbi(): any {
   return [
     {
       "inputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
@@ -461,61 +476,54 @@ function getJsonAbi(): any {
       "type": "event"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "DOMAIN_SEPARATOR",
       "outputs": [
         {
           "internalType": "bytes32",
-          "name": "param",
+          "name": "",
           "type": "bytes32"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "MINIMUM_LIQUIDITY",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "PERMIT_TYPEHASH",
       "outputs": [
         {
           "internalType": "bytes32",
-          "name": "param",
+          "name": "",
           "type": "bytes32"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [
         {
           "internalType": "address",
-          "name": "addressA",
+          "name": "owner",
           "type": "address"
         },
         {
           "internalType": "address",
-          "name": "addressB",
+          "name": "spender",
           "type": "address"
         }
       ],
@@ -523,16 +531,14 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -541,7 +547,7 @@ function getJsonAbi(): any {
         },
         {
           "internalType": "uint256",
-          "name": "value",
+          "name": "amount",
           "type": "uint256"
         }
       ],
@@ -549,20 +555,18 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "bool",
-          "name": "param",
+          "name": "",
           "type": "bool"
         }
       ],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [
         {
           "internalType": "address",
-          "name": "param",
+          "name": "account",
           "type": "address"
         }
       ],
@@ -570,16 +574,14 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -600,42 +602,60 @@ function getJsonAbi(): any {
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "decimals",
       "outputs": [
         {
           "internalType": "uint8",
-          "name": "param",
+          "name": "",
           "type": "uint8"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "subtractedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "decreaseAllowance",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "factory",
       "outputs": [
         {
           "internalType": "address",
-          "name": "param",
+          "name": "",
           "type": "address"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "getReserves",
       "outputs": [
@@ -655,12 +675,34 @@ function getJsonAbi(): any {
           "type": "uint32"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "spender",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "addedValue",
+          "type": "uint256"
+        }
+      ],
+      "name": "increaseAllowance",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "address",
@@ -675,27 +717,23 @@ function getJsonAbi(): any {
       ],
       "name": "initialize",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "kLast",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -711,31 +749,27 @@ function getJsonAbi(): any {
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "name",
       "outputs": [
         {
           "internalType": "string",
-          "name": "param",
+          "name": "",
           "type": "string"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [
         {
           "internalType": "address",
-          "name": "param",
+          "name": "",
           "type": "address"
         }
       ],
@@ -743,16 +777,14 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -792,42 +824,36 @@ function getJsonAbi(): any {
       ],
       "name": "permit",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "price0CumulativeLast",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "price1CumulativeLast",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -837,12 +863,10 @@ function getJsonAbi(): any {
       ],
       "name": "skim",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "uint256",
@@ -867,81 +891,69 @@ function getJsonAbi(): any {
       ],
       "name": "swap",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "symbol",
       "outputs": [
         {
           "internalType": "string",
-          "name": "param",
+          "name": "",
           "type": "string"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [],
       "name": "sync",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "token0",
       "outputs": [
         {
           "internalType": "address",
-          "name": "param",
+          "name": "",
           "type": "address"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "token1",
       "outputs": [
         {
           "internalType": "address",
-          "name": "param",
+          "name": "",
           "type": "address"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "totalSupply",
       "outputs": [
         {
           "internalType": "uint256",
-          "name": "param",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -950,7 +962,7 @@ function getJsonAbi(): any {
         },
         {
           "internalType": "uint256",
-          "name": "value",
+          "name": "amount",
           "type": "uint256"
         }
       ],
@@ -958,16 +970,14 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "bool",
-          "name": "param",
+          "name": "",
           "type": "bool"
         }
       ],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
           "internalType": "address",
@@ -981,7 +991,7 @@ function getJsonAbi(): any {
         },
         {
           "internalType": "uint256",
-          "name": "value",
+          "name": "amount",
           "type": "uint256"
         }
       ],
@@ -989,11 +999,10 @@ function getJsonAbi(): any {
       "outputs": [
         {
           "internalType": "bool",
-          "name": "param",
+          "name": "",
           "type": "bool"
         }
       ],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     }

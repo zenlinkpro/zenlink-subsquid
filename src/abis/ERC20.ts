@@ -93,9 +93,7 @@ interface Chain  {
 
 export class Contract  {
   private readonly _chain: Chain
-
   private readonly blockHeight: number
-
   readonly address: string
 
   constructor(ctx: BlockContext, address: string)

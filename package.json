@@ -6,7 +6,8 @@
     "db:migrate": "npx squid-typeorm-migration apply",
     "processor:start": "node lib/processor.js",
     "query-node:start": "squid-graphql-server",
-    "lint": "eslint . --ext .ts --ignore-path .gitignore --ignore-pattern src/abi/**/*  --fix"
+    "lint": "eslint . --ext .ts --ignore-path .gitignore --ignore-pattern src/abi/**/*  --fix",
+    "typegen:abis": "node scripts/gen-abis.ts"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.6.1",
