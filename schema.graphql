@@ -105,7 +105,7 @@ type Pair @entity {
 
   # creation stats
   createdAtTimestamp: DateTime!
-  createdAtBlockNumber: Int!
+  createdAtBlockNumber: BigInt!
 
   # Fields used to help derived relationship
   liquidityProviderCount: Int! # used to detect new exchanges
@@ -160,7 +160,7 @@ type LiquidityPositionSnapshot @entity {
 
 type Transaction @entity {
   id: ID! # txn hash
-  blockNumber: Int!
+  blockNumber: BigInt!
   timestamp: DateTime!
   mints: [ID!]!
   burns: [ID!]!
@@ -263,7 +263,7 @@ type ZenlinkDayData @entity {
 
 type PairHourData @entity {
   id: ID!
-  hourStartUnix: Int! # unix timestamp for start of hour
+  hourStartUnix: BigInt! # unix timestamp for start of hour
   pair: Pair!
 
   # reserves

@@ -8,7 +8,7 @@ import * as ERC20 from '../abis/ERC20'
 export async function getOrCreateToken(ctx: CommonHandlerContext<Store>, address: string): Promise<Token> {
   let token = await ctx.store.get(Token, address)
 
-  if (token == null) {
+  if (!token) {
     const erc20 = new ERC20.Contract(ctx, address)
 
     const name = await erc20.name()

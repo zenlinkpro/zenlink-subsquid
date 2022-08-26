@@ -1,4 +1,5 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import * as marshal from "./marshal"
 
 @Entity_()
 export class Transaction {
@@ -9,8 +10,8 @@ export class Transaction {
   @PrimaryColumn_()
   id!: string
 
-  @Column_("int4", {nullable: false})
-  blockNumber!: number
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  blockNumber!: bigint
 
   @Column_("timestamp with time zone", {nullable: false})
   timestamp!: Date

@@ -16,8 +16,8 @@ import {
 export async function updateZenlinkDayData(ctx: EvmLogHandlerContext<Store>) {
   const factory = (await ctx.store.get(Factory, FACTORY_ADDRESS))!
   const { timestamp } = ctx.block
-  const dayID = timestamp / 86400
-  const dayStartTimestamp = dayID * 86400
+  const dayID = parseInt((timestamp / 86400000).toString(), 10)
+  const dayStartTimestamp = Number(dayID) * 86400000
   let zenlinkDayData = await ctx.store.get(ZenlinkDayData, dayID.toString())
   if (!zenlinkDayData) {
     zenlinkDayData = new ZenlinkDayData({
@@ -40,8 +40,8 @@ export async function updateZenlinkDayData(ctx: EvmLogHandlerContext<Store>) {
 export async function updatePairDayData(ctx: EvmLogHandlerContext<Store>) {
   const contractAddress = ctx.event.args.address
   const { timestamp } = ctx.block
-  const dayID = timestamp / 86400
-  const dayStartTimestamp = dayID * 86400
+  const dayID = parseInt((timestamp / 86400000).toString(), 10)
+  const dayStartTimestamp = Number(dayID) * 86400000
   const dayPairID = `${contractAddress as string}-${dayID}`
   const pair = (await ctx.store.get(Pair, contractAddress))!
   let pairDayData = await ctx.store.get(PairDayData, dayPairID)
@@ -70,15 +70,15 @@ export async function updatePairDayData(ctx: EvmLogHandlerContext<Store>) {
 export async function updatePairHourData(ctx: EvmLogHandlerContext<Store>) {
   const contractAddress = ctx.event.args.address
   const { timestamp } = ctx.block
-  const hourIndex = timestamp / 3600
-  const hourStartUnix = hourIndex * 3600
+  const hourIndex = parseInt((timestamp / 3600000).toString(), 10)
+  const hourStartUnix = Number(hourIndex) * 3600000
   const dayPairID = `${contractAddress as string}-${hourIndex}`
   const pair = (await ctx.store.get(Pair, contractAddress))!
   let pairHourData = await ctx.store.get(PairHourData, dayPairID)
   if (!pairHourData) {
     pairHourData = new PairHourData({
       id: dayPairID,
-      hourStartUnix,
+      hourStartUnix: BigInt(hourStartUnix),
       pair,
       hourlyVolumeToken0: ZERO_BD.toString(),
       hourlyVolumeToken1: ZERO_BD.toString(),
@@ -98,8 +98,8 @@ export async function updatePairHourData(ctx: EvmLogHandlerContext<Store>) {
 export async function updateTokenDayData(ctx: EvmLogHandlerContext<Store>, token: Token) {
   const bundle = (await ctx.store.get(Bundle, '1'))!
   const { timestamp } = ctx.block
-  const dayID = timestamp / 86400
-  const dayStartTimestamp = dayID * 86400
+  const dayID = parseInt((timestamp / 86400000).toString(), 10)
+  const dayStartTimestamp = Number(dayID) * 86400000
   const tokenDayID = `${token.id}-${dayID}`
   let tokenDayData = await ctx.store.get(TokenDayData, tokenDayID)
   if (!tokenDayData) {

@@ -1,4 +1,5 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
+import * as marshal from "./marshal"
 import {Pair} from "./pair.model"
 
 @Entity_()
@@ -10,8 +11,8 @@ export class PairHourData {
   @PrimaryColumn_()
   id!: string
 
-  @Column_("int4", {nullable: false})
-  hourStartUnix!: number
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  hourStartUnix!: bigint
 
   @Index_()
   @ManyToOne_(() => Pair, {nullable: true})

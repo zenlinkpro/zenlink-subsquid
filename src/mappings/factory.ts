@@ -46,7 +46,7 @@ export async function handleNewPair(ctx: EvmLogHandlerContext<Store>) {
     token1,
     liquidityProviderCount: 0,
     createdAtTimestamp: new Date(ctx.block.timestamp),
-    createdAtBlockNumber: ctx.block.height,
+    createdAtBlockNumber: BigInt(ctx.block.height),
     txCount: 0,
     reserve0: ZERO_BD.toString(),
     reserve1: ZERO_BD.toString(),

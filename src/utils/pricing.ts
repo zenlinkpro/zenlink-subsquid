@@ -24,6 +24,7 @@ export const MINIMUM_LIQUIDITY_THRESHOLD_ETH = new BigDecimal(5)
 
 export async function getEthPriceInUSD(ctx: CommonHandlerContext<Store>): Promise<BigDecimal> {
   const usdcPair = await getPair(ctx, WNATIVE_USDC)
+  if (!usdcPair) return BigDecimal(0)
 
   return usdcPair.token0.id === USDC
     ? BigDecimal(usdcPair.token0Price)

@@ -4,7 +4,8 @@ export const knownContracts: ReadonlyArray<string> = []
 
 export const CHAIN_NODE = 'wss://rpc.astar.network'
 
-export const FACTORY_ADDRESS = '0x7BAe21fB8408D534aDfeFcB46371c3576a1D5717'
+// need to be lowercase
+export const FACTORY_ADDRESS = '0x7bae21fb8408d534adfefcb46371c3576a1d5717'
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export const ZERO_BI = 0n

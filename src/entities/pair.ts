@@ -1,6 +1,5 @@
 import { CommonHandlerContext } from '@subsquid/substrate-processor'
 import { Store } from '@subsquid/typeorm-store'
-import assert from 'assert'
 import { Pair } from '../model'
 
 export async function getPair(ctx: CommonHandlerContext<Store>, id: string) {
@@ -8,7 +7,6 @@ export async function getPair(ctx: CommonHandlerContext<Store>, id: string) {
     where: { id },
     relations: { token0: true, token1: true },
   })
-  assert(item != null, id)
 
   return item
 }

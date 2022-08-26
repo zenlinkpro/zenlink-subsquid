@@ -1,4 +1,5 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
+import * as marshal from "./marshal"
 import {Token} from "./token.model"
 import {PairHourData} from "./pairHourData.model"
 import {LiquidityPosition} from "./liquidityPosition.model"
@@ -102,8 +103,8 @@ export class Pair {
   @Column_("timestamp with time zone", {nullable: false})
   createdAtTimestamp!: Date
 
-  @Column_("int4", {nullable: false})
-  createdAtBlockNumber!: number
+  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
+  createdAtBlockNumber!: bigint
 
   @Column_("int4", {nullable: false})
   liquidityProviderCount!: number

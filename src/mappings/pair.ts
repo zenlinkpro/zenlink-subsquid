@@ -28,7 +28,7 @@ const MintAbi = pairAbi.events['Mint(address,uint256,uint256)']
 const BurnAbi = pairAbi.events['Burn(address,uint256,uint256,address)']
 
 async function isCompleteMint(ctx: CommonHandlerContext<Store>, mintId: string): Promise<boolean> {
-  return !!(await ctx.store.get(Mint, mintId))?.sender // sufficient checks
+  return !!(await ctx.store.get(Mint, { where: { id: mintId } }))?.sender // sufficient checks
 }
 
 export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<void> {
@@ -42,21 +42,23 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
   const transactionHash = ctx.event.evmTxHash
 
   // user stats
-  const { from } = data
-  const { to } = data
+  let { from, to } = data
+  from = from.toLowerCase()
+  to = to.toLowerCase()
 
   // get pair and load contract
   const pair = await getPair(ctx, contractAddress)
+  if (!pair) return
 
   // liquidity token amount being transfered
   const value = convertTokenToDecimal(data.value.toBigInt(), 18)
 
   // get or create transaction
   let transaction = await getTransaction(ctx, ctx.event.evmTxHash)
-  if (transaction == null) {
+  if (!transaction) {
     transaction = new Transaction({
       id: transactionHash,
-      blockNumber: ctx.block.height,
+      blockNumber: BigInt(ctx.block.height),
       timestamp: new Date(ctx.block.timestamp),
       mints: [],
       burns: [],
@@ -71,7 +73,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
   if (from === ADDRESS_ZERO) {
     pair.totalSupply = BigDecimal(pair.totalSupply).plus(value).toString()
 
-    if (mints.length || await isCompleteMint(ctx, mints[mints.length - 1])) {
+    if (!mints.length || await isCompleteMint(ctx, mints[mints.length - 1])) {
       const mint = new Mint({
         id: `${transactionHash}-${mints.length}`,
         transaction,
@@ -118,7 +120,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
     }
 
     // if this logical burn included a fee mint, account for this
-    if (mints.length !== 0 && !await isCompleteMint(ctx, mints[mints.length - 1])) {
+    if (mints.length !== 0 && !(await isCompleteMint(ctx, mints[mints.length - 1]))) {
       const mint = await ctx.store.get(Mint, mints[mints.length - 1])
       if (mint) {
         burn.feeTo = mint.to
@@ -149,6 +151,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
         liquidityPositions: [],
         usdSwapped: ZERO_BD.toString()
       })
+      await ctx.store.save(user)
     }
     const position = await updateLiquidityPosition(ctx, pair, user)
     const pairContract = new pairAbi.Contract(ctx, contractAddress)
@@ -157,7 +160,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
       18
     ).toString()
     await ctx.store.save(position)
-    await createLiquiditySnapShot(ctx, position)
+    await createLiquiditySnapShot(ctx, pair, position)
   }
 
   if (to !== ADDRESS_ZERO && to !== pair.id) {
@@ -168,6 +171,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
         liquidityPositions: [],
         usdSwapped: ZERO_BD.toString()
       })
+      await ctx.store.save(user)
     }
     const position = await updateLiquidityPosition(ctx, pair, user)
     const pairContract = new pairAbi.Contract(ctx, contractAddress)
@@ -176,7 +180,7 @@ export async function handleTransfer(ctx: EvmLogHandlerContext<Store>): Promise<
       18
     ).toString()
     await ctx.store.save(position)
-    await createLiquiditySnapShot(ctx, position)
+    await createLiquiditySnapShot(ctx, pair, position)
   }
 
   await ctx.store.save(pair)
@@ -203,11 +207,11 @@ async function updateLiquidityPosition(
 
 async function createLiquiditySnapShot(
   ctx: CommonHandlerContext<Store>,
-  position: LiquidityPosition
+  pair: Pair,
+  position: LiquidityPosition,
 ): Promise<void> {
-  const { timestamp } = ctx.block
   const bundle = await ctx.store.get(Bundle, '1')
-  const pair = await ctx.store.get(Pair, position.pair.id)
+  const { timestamp } = ctx.block
   if (!pair || !bundle) return
   const token0 = await ctx.store.get(Token, pair.token0.id)
   const token1 = await ctx.store.get(Token, pair.token1.id)
@@ -239,6 +243,7 @@ export async function handleSync(ctx: EvmLogHandlerContext<Store>): Promise<void
   const bundle = await getBundle(ctx)
   const factory = await getFactory(ctx)
   const pair = await getPair(ctx, contractAddress)
+  if (!pair) return
   const { token0, token1 } = pair
 
   factory.totalLiquidityETH = BigDecimal(factory.totalLiquidityETH)
@@ -252,7 +257,7 @@ export async function handleSync(ctx: EvmLogHandlerContext<Store>): Promise<void
     .toString()
 
   pair.reserve0 = convertTokenToDecimal(data.reserve0.toBigInt(), token0.decimals).toString()
-  pair.reserve1 = convertTokenToDecimal(data.reserve1.toBigInt(), token0.decimals).toString()
+  pair.reserve1 = convertTokenToDecimal(data.reserve1.toBigInt(), token1.decimals).toString()
   pair.token0Price = !BigDecimal(pair.reserve1).eq(ZERO_BD)
     ? BigDecimal(pair.reserve0).div(pair.reserve1).toString()
     : ZERO_BD.toString()
@@ -301,7 +306,7 @@ export async function handleSync(ctx: EvmLogHandlerContext<Store>): Promise<void
 
   // use tracked amounts globally
   factory.totalLiquidityETH = BigDecimal(factory.totalLiquidityETH).plus(trackedLiquidityETH).toString()
-  factory.totalLiquidityUSD = BigDecimal(factory.totalLiquidityETH).plus(bundle.ethPrice).toString()
+  factory.totalLiquidityUSD = BigDecimal(factory.totalLiquidityETH).times(bundle.ethPrice).toString()
   await ctx.store.save(factory)
 
   // now correctly set liquidity amounts for each token
@@ -318,6 +323,7 @@ export async function handleSwap(ctx: EvmLogHandlerContext<Store>): Promise<void
   const factory = await getFactory(ctx)
 
   const pair = await getPair(ctx, contractAddress)
+  if (!pair) return
 
   const { token0, token1 } = pair
 
@@ -406,10 +412,10 @@ export async function handleSwap(ctx: EvmLogHandlerContext<Store>): Promise<void
   await ctx.store.save(factory)
 
   let transaction = await getTransaction(ctx, ctx.event.evmTxHash)
-  if (transaction == null) {
+  if (!transaction) {
     transaction = new Transaction({
       id: ctx.event.evmTxHash,
-      blockNumber: ctx.block.height,
+      blockNumber: BigInt(ctx.block.height),
       timestamp: new Date(ctx.block.timestamp),
       mints: [],
       swaps: [],
@@ -432,6 +438,7 @@ export async function handleSwap(ctx: EvmLogHandlerContext<Store>): Promise<void
     amount0Out: amount0Out.toString(),
     amount1Out: amount1Out.toString(),
     sender: data.sender.toLowerCase(),
+    from: data.sender.toLowerCase(),
     to: data.to.toLowerCase(),
     logIndex: ctx.event.indexInBlock,
     amountUSD: trackedAmountUSD.eq(ZERO_BD)
@@ -492,6 +499,7 @@ export async function handleMint(ctx: EvmLogHandlerContext<Store>): Promise<void
   const data = MintAbi.decode(ctx.event.args)
   const factory = await getFactory(ctx)
   const pair = await getPair(ctx, contractAddress)
+  if (!pair) return
 
   const { token0, token1 } = pair
   token0.txCount += 1
@@ -525,7 +533,7 @@ export async function handleMint(ctx: EvmLogHandlerContext<Store>): Promise<void
   const user = (await ctx.store.get(User, mint.to))!
   // update the LP position
   const liquidityPosition = createLiquidityPosition({ pair, user })
-  await createLiquiditySnapShot(ctx, liquidityPosition)
+  await createLiquiditySnapShot(ctx, pair, liquidityPosition)
 
   // update day entities
   await updatePairDayData(ctx)
@@ -547,6 +555,7 @@ export async function handleBurn(ctx: EvmLogHandlerContext<Store>): Promise<void
   const factory = await getFactory(ctx)
 
   const pair = await getPair(ctx, contractAddress)
+  if (!pair) return
 
   // update txn counts
   pair.txCount += 1
@@ -555,7 +564,7 @@ export async function handleBurn(ctx: EvmLogHandlerContext<Store>): Promise<void
   factory.txCount += 1
 
   // update txn counts
-  const {token0, token1} = pair
+  const { token0, token1 } = pair
   token0.txCount += 1
   token1.txCount += 1
   const token0Amount = convertTokenToDecimal(data.amount0.toBigInt(), token0.decimals)
@@ -566,8 +575,16 @@ export async function handleBurn(ctx: EvmLogHandlerContext<Store>): Promise<void
     .times(token1Amount)
     .plus(BigDecimal(token0.derivedETH).times(token0Amount))
     .times(bundle.ethPrice)
-  
-  const user = (await ctx.store.get(User, data.sender))!
+
+  let user = await ctx.store.get(User, data.sender)
+  if (!user) {
+    user = new User({
+      id: data.sender,
+      liquidityPositions: [],
+      usdSwapped: ZERO_BD.toString()
+    })
+    await ctx.store.save(user)
+  }
   await updateLiquidityPosition(ctx, pair, user)
 
   await ctx.store.save(factory)
@@ -584,7 +601,7 @@ export async function handleBurn(ctx: EvmLogHandlerContext<Store>): Promise<void
 
   // update the LP position
   const liquidityPosition = createLiquidityPosition({ pair, user })
-  await createLiquiditySnapShot(ctx, liquidityPosition)
+  await createLiquiditySnapShot(ctx, pair, liquidityPosition)
 
   // update day entities
   await updatePairDayData(ctx)
