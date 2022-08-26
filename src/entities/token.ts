@@ -3,7 +3,7 @@ import { Store } from '@subsquid/typeorm-store'
 import { ZERO_BD } from '../consts'
 import { convertTokenToDecimal } from '../utils/helpers'
 import { Token } from '../model'
-import * as ERC20 from '../abis/erc20'
+import * as ERC20 from '../abis/ERC20'
 
 export async function getOrCreateToken(ctx: CommonHandlerContext<Store>, address: string): Promise<Token> {
   let token = await ctx.store.get(Token, address)
