@@ -247,13 +247,13 @@ export async function handleSync(ctx: EvmLogHandlerContext<Store>): Promise<void
   const { token0, token1 } = pair
 
   factory.totalLiquidityETH = BigDecimal(factory.totalLiquidityETH)
-    .minus(BigDecimal(pair.trackedReserveETH))
+    .minus(pair.trackedReserveETH)
     .toString()
   token0.totalLiquidity = BigDecimal(token0.totalLiquidity)
-    .minus(BigDecimal(pair.reserve0))
+    .minus(pair.reserve0)
     .toString()
   token1.totalLiquidity = BigDecimal(token1.totalLiquidity)
-    .minus(BigDecimal(pair.reserve1))
+    .minus(pair.reserve1)
     .toString()
 
   pair.reserve0 = convertTokenToDecimal(data.reserve0.toBigInt(), token0.decimals).toString()
@@ -280,7 +280,10 @@ export async function handleSync(ctx: EvmLogHandlerContext<Store>): Promise<void
 
     // both are whitelist tokens, take average of both amounts
     if (WHITELIST.includes(token0.id) && WHITELIST.includes(token1.id)) {
-      trackedLiquidityETH = BigDecimal(pair.reserve0).times(price0).plus(BigDecimal(pair.reserve1).times(price1))
+      trackedLiquidityETH = BigDecimal(pair.reserve0)
+        .times(price0)
+        .plus(BigDecimal(pair.reserve1)
+        .times(price1))
     }
 
     // take double value of the whitelisted token amount
@@ -473,15 +476,21 @@ export async function handleSwap(ctx: EvmLogHandlerContext<Store>): Promise<void
 
   // swap specific updating for token0
   token0DayData.dailyVolumeToken = BigDecimal(token0DayData.dailyVolumeToken).plus(amount0Total).toString()
-  token0DayData.dailyVolumeETH = BigDecimal(token0DayData.dailyVolumeETH).plus(amount0Total.times(token0.derivedETH)).toString()
-  token0DayData.dailyVolumeUSD = BigDecimal(token0DayData.dailyVolumeUSD).plus(
-    amount0Total.times(token0.derivedETH).times(bundle.ethPrice)
-  ).toString()
+  token0DayData.dailyVolumeETH = BigDecimal(token0DayData.dailyVolumeETH)
+    .plus(amount0Total.times(token0.derivedETH))
+    .toString()
+  token0DayData.dailyVolumeUSD = BigDecimal(token0DayData.dailyVolumeUSD)
+    .plus(amount0Total.times(token0.derivedETH).times(bundle.ethPrice))
+    .toString()
   await ctx.store.save(token0DayData)
 
   // swap specific updating
-  token1DayData.dailyVolumeToken = BigDecimal(token1DayData.dailyVolumeToken).plus(amount1Total).toString()
-  token1DayData.dailyVolumeETH = BigDecimal(token1DayData.dailyVolumeETH).plus(amount1Total.times(token1.derivedETH)).toString()
+  token1DayData.dailyVolumeToken = BigDecimal(token1DayData.dailyVolumeToken)
+    .plus(amount1Total)
+    .toString()
+  token1DayData.dailyVolumeETH = BigDecimal(token1DayData.dailyVolumeETH)
+    .plus(amount1Total.times(token1.derivedETH))
+    .toString()
   token1DayData.dailyVolumeUSD = BigDecimal(token1DayData.dailyVolumeUSD).plus(
     amount1Total.times(token1.derivedETH).times(bundle.ethPrice)
   ).toString()

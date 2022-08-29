@@ -28,8 +28,7 @@ const processor = new SubstrateBatchProcessor()
         pair.events['Mint(address,uint256,uint256)'].topic,
         pair.events['Burn(address,uint256,uint256,address)'].topic,
       ],
-    ],
-    range: { from: 1510414 }
+    ]
   })
 
 processor.run(database, async (ctx) => {
