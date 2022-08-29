@@ -98,3 +98,38 @@ More details will be added later.
 ## Disclaimer
 
 This is alpha-quality software. Expect some bugs and incompatible changes in coming weeks.
+
+## Query examples
+
+```graphql
+{
+  query ExampleQuery {
+    bundles {
+      ethPrice
+    }
+    factories {
+      pairCount
+      totalLiquidityETH
+      totalLiquidityUSD
+      totalVolumeETH
+      totalVolumeUSD
+      txCount
+      untrackedVolumeUSD
+      id
+    }
+    pairs {
+      token0 {
+        symbol
+      }
+      token1 {
+        symbol
+      }
+      reserve0
+      reserve1
+      reserveUSD
+      reserveETH
+      txCount
+    }
+  }
+}
+```
