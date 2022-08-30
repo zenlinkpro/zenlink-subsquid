@@ -99,6 +99,19 @@ More details will be added later.
 
 This is alpha-quality software. Expect some bugs and incompatible changes in coming weeks.
 
+## Deploy
+
+```bash
+# 1. Setup an npx alias (will work only in the local Squid folder)
+alias sqd="npx sqd"
+
+# 2. Pass your generated deployment key to CLI
+sqd auth --key <your_deployment_key>
+
+# 3. Deploy your squid
+sqd squid:release <squid_name>@<squid_version> --source <github_url>\#<commit_hash>
+```
+
 ## Query examples
 
 ```graphql
