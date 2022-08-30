@@ -1,3 +1,17 @@
+type ZenlinkInfo @entity {
+  id: ID!
+  updatedDate: DateTime!
+  "BigDecimal"
+  totalVolumeUSD: String!
+  "BigDecimal"
+  totalTvlUSD: String!
+  # transactions
+  txCount: Int!
+
+  factory: Factory!
+  stableSwapInfo: StableSwapInfo!
+}
+
 type Factory @entity {
   # factory address
   id: ID!
@@ -23,6 +37,159 @@ type Factory @entity {
 
   # transactions
   txCount: Int!
+}
+
+type StableSwapInfo @entity {
+  id: ID!
+  poolCount: Int!
+
+  # total volume
+  "BigDecimal"
+  totalVolumeUSD: String!
+
+  "BigDecimal"
+  totalTvlUSD: String!
+  # transactions
+  txCount: Int!
+}
+
+type StableSwap @entity {
+  id: ID!
+
+   # swap address
+  address: Bytes!
+
+  # base swap address
+  baseSwapAddress: Bytes!
+
+  # number of tokens supported
+  numTokens: Int!
+
+  # supported tokens
+  tokens: [Bytes!]!
+
+  # supported base tokens (for SwapNormal, this is same as tokens; for MetaSwap, this is the corresbonding base pool tokens)
+  baseTokens: [Bytes!]!
+
+  # supported all tokens (metapool tokens plus basepool tokens)
+  allTokens: [Bytes!]!
+
+  # token balances
+  balances: [BigInt!]!
+
+  # liquidity provider token
+  lpToken: Bytes!
+
+  # amplification coefficient
+  a: BigInt!
+
+  swapFee: BigInt!
+  adminFee: BigInt!
+  withdrawFee: BigInt
+
+  virtualPrice: BigInt!
+
+  # owner address
+  owner: Bytes!
+
+  events: [StableSwapEvent!] @derivedFrom(field: "stableSwap")
+
+  exchanges: [StableSwapExchange!] @derivedFrom(field: "stableSwap")
+
+  stableSwapDayData: [StableSwapDayData!] @derivedFrom(field: "stableSwap")
+
+  "BigDecimal"
+  tvl: String!
+  "BigDecimal"
+  volume: String!
+}
+
+type StableSwapEvent @entity{
+  id: ID!
+
+  stableSwap: StableSwap!
+
+  data: StableSwapEventData
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+union StableSwapEventData = 
+  StableSwapNewFeeEventData | 
+  StableSwapRampAEventData | 
+  StableSwapStopRampAEventData | 
+  StableSwapAddLiquidityEventData | 
+  StableSwapRemoveLiquidityEventData | 
+  StableSwapFlashLoanEventData
+
+type StableSwapNewFeeEventData {
+  swapFee: BigInt!
+  adminFee: BigInt!
+}
+
+type StableSwapRampAEventData {
+  oldA: BigInt!
+  newA: BigInt!
+  initialTime: BigInt!
+  futureTime: BigInt!
+}
+
+type StableSwapStopRampAEventData {
+  currentA: BigInt!
+  time: BigInt!
+}
+
+type StableSwapAddLiquidityEventData {
+  provider: Bytes!
+  tokenAmounts: [BigInt!]!
+  fees: [BigInt!]!
+  invariant: BigInt
+  lpTokenSupply: BigInt!
+}
+
+type StableSwapRemoveLiquidityEventData {
+  provider: Bytes!
+  tokenAmounts: [BigInt!]!
+  fees: [BigInt!]
+  lpTokenSupply: BigInt!
+}
+
+type StableSwapFlashLoanEventData {
+  caller: Bytes!
+  receiver: Bytes!
+  amountsOut: [BigInt!]!
+}
+
+type StableSwapExchange @entity {
+  id: ID!
+
+  stableSwap: StableSwap!
+
+  data: StableSwapExchangeData
+
+  block: BigInt!
+  timestamp: BigInt!
+  transaction: Bytes!
+}
+
+union StableSwapExchangeData = StableSwapTokenExchangeData | StableSwapTokenExchangeUnderlyingData
+
+type StableSwapTokenExchangeData {
+  buyer: Bytes!
+  boughtId: BigInt!
+  tokensBought: BigInt!
+  soldId: BigInt!
+  tokensSold: BigInt!
+}
+
+type StableSwapTokenExchangeUnderlyingData {
+  buyer: Bytes!
+  boughtId: BigInt!
+  tokensBought: BigInt!
+  soldId: BigInt!
+  tokensSold: BigInt!
 }
 
 type Token @entity {
@@ -325,4 +492,14 @@ type TokenDayData @entity {
 
   # price stats
   priceUSD: String!
+}
+
+type StableSwapDayData @entity {
+  id: ID!
+  date: DateTime!
+  stableSwap: StableSwap!
+
+  dailyVolumeUSD: String!
+  dailyTxns: Int!
+  tvl: String!
 }
