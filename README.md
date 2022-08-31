@@ -115,34 +115,53 @@ sqd squid:release <squid_name>@<squid_version> --source <github_url>\#<commit_ha
 ## Query examples
 
 ```graphql
-{
-  query ExampleQuery {
-    bundles {
-      ethPrice
-    }
-    factories {
-      pairCount
-      totalLiquidityETH
-      totalLiquidityUSD
-      totalVolumeETH
-      totalVolumeUSD
-      txCount
-      untrackedVolumeUSD
-      id
-    }
-    pairs {
-      token0 {
-        symbol
-      }
-      token1 {
-        symbol
-      }
-      reserve0
-      reserve1
-      reserveUSD
-      reserveETH
-      txCount
+query ExampleQuery {
+  zenlinkInfos {
+    totalTvlUSD
+    totalVolumeUSD
+    updatedDate
+    txCount
+  }
+  factories {
+    totalLiquidityETH
+    totalLiquidityUSD
+    totalVolumeETH
+    totalVolumeUSD
+    txCount
+    id
+    pairCount
+  }
+  stableSwapInfos {
+    id
+    poolCount
+    totalTvlUSD
+    totalVolumeUSD
+    txCount
+    swaps {
+      tvlUSD
+      volumeUSD
     }
   }
-}
+  bundles {
+    ethPrice
+  }
+   stableSwaps {
+    lpToken
+    tokens
+    tvlUSD
+    virtualPrice
+    volumeUSD
+    id
+  }
+  zenlinkDayInfos(limit: 5, orderBy: date_DESC) {
+    date
+    dailyVolumeUSD
+    tvlUSD
+  }
+  stableDayData(limit: 5, orderBy: date_DESC) {
+    dailyVolumeUSD
+    date
+    tvlUSD
+  }
+} 
 ```
