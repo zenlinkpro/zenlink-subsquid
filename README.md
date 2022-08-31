@@ -145,7 +145,7 @@ query ExampleQuery {
   bundles {
     ethPrice
   }
-   stableSwaps {
+  stableSwaps {
     lpToken
     tokens
     tvlUSD
