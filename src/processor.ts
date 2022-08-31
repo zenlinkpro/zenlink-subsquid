@@ -1,12 +1,23 @@
 import { lookupArchive } from "@subsquid/archive-registry";
 import { EvmLogHandlerContext, SubstrateBatchProcessor } from "@subsquid/substrate-processor";
 import { Store, TypeormDatabase } from "@subsquid/typeorm-store";
-import { CHAIN_NODE, FACTORY_ADDRESS } from "./consts";
+import { CHAIN_NODE, FACTORY_ADDRESS, FOUR_POOL } from "./consts";
 import * as factory from './abis/factory'
 import * as pair from './abis/pair'
 import { handleNewPair } from "./mappings/factory";
 import { Pair } from "./model";
 import { handleBurn, handleMint, handleSwap, handleSync, handleTransfer } from "./mappings/pair";
+import * as StableSwapContract from "./abis/StableSwap"
+import { 
+  handleRampA, 
+  handleStableSwapAddLiquidity, 
+  handleStableSwapExchange, 
+  handleStableSwapNewFee, 
+  handleStableSwapRemoveLiquidity, 
+  handleStableSwapRemoveLiquidityImbalance, 
+  handleStableSwapRemoveLiquidityOne, 
+  handleStopRampA 
+} from "./mappings/stableSwap";
 
 const database = new TypeormDatabase()
 const processor = new SubstrateBatchProcessor()
@@ -28,7 +39,22 @@ const processor = new SubstrateBatchProcessor()
         pair.events['Mint(address,uint256,uint256)'].topic,
         pair.events['Burn(address,uint256,uint256,address)'].topic,
       ],
-    ]
+    ],
+  })
+  .addEvmLog(FOUR_POOL, {
+    filter: [
+      [
+        StableSwapContract.events['NewFee(uint256,uint256)'].topic,
+        StableSwapContract.events['RampA(uint256,uint256,uint256,uint256)'].topic,
+        StableSwapContract.events['StopRampA(uint256,uint256)'].topic,
+        StableSwapContract.events['AddLiquidity(address,uint256[],uint256[],uint256,uint256)'].topic,
+        StableSwapContract.events['RemoveLiquidity(address,uint256[],uint256[],uint256)'].topic,
+        StableSwapContract.events['RemoveLiquidityOne(address,uint256,uint256,uint256)'].topic,
+        StableSwapContract.events['RemoveLiquidityImbalance(address,uint256[],uint256[],uint256,uint256)'].topic,
+        StableSwapContract.events['TokenExchange(address,uint256,uint256,uint256,uint256)'].topic
+      ],
+    ],
+    range: { from: 1465712 }
   })
 
 processor.run(database, async (ctx) => {
@@ -70,6 +96,36 @@ async function handleEvmLog(ctx: EvmLogHandlerContext<Store>) {
   switch (contractAddress) {
     case FACTORY_ADDRESS:
       await handleNewPair(ctx)
+      break
+    case FOUR_POOL:
+      switch (ctx.event.args.topics[0]) {
+        case StableSwapContract.events['NewFee(uint256,uint256)'].topic:
+          await handleStableSwapNewFee(ctx)
+          break
+        case StableSwapContract.events['RampA(uint256,uint256,uint256,uint256)'].topic:
+          await handleRampA(ctx)
+          break
+        case StableSwapContract.events['StopRampA(uint256,uint256)'].topic:
+          await handleStopRampA(ctx)
+          break
+        case StableSwapContract.events['AddLiquidity(address,uint256[],uint256[],uint256,uint256)'].topic:
+          await handleStableSwapAddLiquidity(ctx)
+          break
+        case StableSwapContract.events['RemoveLiquidity(address,uint256[],uint256[],uint256)'].topic:
+          await handleStableSwapRemoveLiquidity(ctx)
+          break
+        case StableSwapContract.events['RemoveLiquidityOne(address,uint256,uint256,uint256)'].topic:
+          await handleStableSwapRemoveLiquidityOne(ctx)
+          break
+        case StableSwapContract.events['RemoveLiquidityImbalance(address,uint256[],uint256[],uint256,uint256)'].topic:
+          await handleStableSwapRemoveLiquidityImbalance(ctx)
+          break
+        case StableSwapContract.events['TokenExchange(address,uint256,uint256,uint256,uint256)'].topic:
+          await handleStableSwapExchange(ctx)
+          break
+        default:
+          break
+      }
       break
     default:
       if (await isKnownPairContracts(ctx.store, contractAddress)) {

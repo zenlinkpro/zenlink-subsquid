@@ -35,7 +35,10 @@ export async function getEthPriceInUSD(ctx: CommonHandlerContext<Store>): Promis
  * Search through graph to find derived Eth per token.
  * @todo update to be derived ETH (plus stablecoin estimates)
  * */
-export async function findEthPerToken(ctx: CommonHandlerContext<Store>, tokenId: string): Promise<BigDecimal> {
+export async function findEthPerToken(
+  ctx: CommonHandlerContext<Store>, 
+  tokenId: string
+): Promise<BigDecimal> {
   if (tokenId === WNATIVE) {
     return ONE_BD
   }
@@ -65,4 +68,11 @@ export async function findEthPerToken(ctx: CommonHandlerContext<Store>, tokenId:
     }
   }
   return ZERO_BD // nothing was found return 0
+}
+
+export async function findUSDPerToken(
+  ctx: CommonHandlerContext<Store>, 
+  tokenId: string
+): Promise<BigDecimal> {
+  return (await getEthPriceInUSD(ctx)).mul(await findEthPerToken(ctx, tokenId))
 }

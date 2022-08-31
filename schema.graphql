@@ -51,6 +51,8 @@ type StableSwapInfo @entity {
   totalTvlUSD: String!
   # transactions
   txCount: Int!
+
+  swaps: [StableSwap!]! @derivedFrom(field: "stableSwapInfo")
 }
 
 type StableSwap @entity {
@@ -66,13 +68,13 @@ type StableSwap @entity {
   numTokens: Int!
 
   # supported tokens
-  tokens: [Bytes!]!
+  tokens: [String!]!
 
   # supported base tokens (for SwapNormal, this is same as tokens; for MetaSwap, this is the corresbonding base pool tokens)
-  baseTokens: [Bytes!]!
+  baseTokens: [String!]!
 
   # supported all tokens (metapool tokens plus basepool tokens)
-  allTokens: [Bytes!]!
+  allTokens: [String!]!
 
   # token balances
   balances: [BigInt!]!
@@ -85,12 +87,10 @@ type StableSwap @entity {
 
   swapFee: BigInt!
   adminFee: BigInt!
-  withdrawFee: BigInt
 
   virtualPrice: BigInt!
 
-  # owner address
-  owner: Bytes!
+  stableSwapInfo: StableSwapInfo!
 
   events: [StableSwapEvent!] @derivedFrom(field: "stableSwap")
 
@@ -99,9 +99,9 @@ type StableSwap @entity {
   stableSwapDayData: [StableSwapDayData!] @derivedFrom(field: "stableSwap")
 
   "BigDecimal"
-  tvl: String!
+  tvlUSD: String!
   "BigDecimal"
-  volume: String!
+  volumeUSD: String!
 }
 
 type StableSwapEvent @entity{
@@ -153,7 +153,7 @@ type StableSwapRemoveLiquidityEventData {
   provider: Bytes!
   tokenAmounts: [BigInt!]!
   fees: [BigInt!]
-  lpTokenSupply: BigInt!
+  lpTokenSupply: BigInt
 }
 
 type StableSwapFlashLoanEventData {
@@ -412,7 +412,7 @@ type Bundle @entity {
   ethPrice: String! # price of ETH usd
 }
 
-type ZenlinkDayData @entity {
+type FactoryDayData @entity {
   id: ID! # timestamp rounded to current day by dividing by 86400
   date: DateTime!
 
@@ -500,6 +500,24 @@ type StableSwapDayData @entity {
   stableSwap: StableSwap!
 
   dailyVolumeUSD: String!
-  dailyTxns: Int!
-  tvl: String!
+  tvlUSD: String!
+}
+
+type StableDayData @entity {
+  id: ID!
+  date: DateTime!
+
+  dailyVolumeUSD: String!
+  tvlUSD: String!
+}
+
+type ZenlinkDayInfo @entity {
+  id: ID!
+  date: DateTime!
+
+  standardInfo: FactoryDayData!
+  stableInfo: StableSwapDayData!
+
+  dailyVolumeUSD: String!
+  tvlUSD: String!
 }

@@ -1,5 +1,6 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
 import * as marshal from "./marshal"
+import {StableSwapInfo} from "./stableSwapInfo.model"
 import {StableSwapEvent} from "./stableSwapEvent.model"
 import {StableSwapExchange} from "./stableSwapExchange.model"
 import {StableSwapDayData} from "./stableSwapDayData.model"
@@ -22,14 +23,14 @@ export class StableSwap {
   @Column_("int4", {nullable: false})
   numTokens!: number
 
-  @Column_("bytea", {array: true, nullable: false})
-  tokens!: (Uint8Array)[]
+  @Column_("text", {array: true, nullable: false})
+  tokens!: (string)[]
 
-  @Column_("bytea", {array: true, nullable: false})
-  baseTokens!: (Uint8Array)[]
+  @Column_("text", {array: true, nullable: false})
+  baseTokens!: (string)[]
 
-  @Column_("bytea", {array: true, nullable: false})
-  allTokens!: (Uint8Array)[]
+  @Column_("text", {array: true, nullable: false})
+  allTokens!: (string)[]
 
   @Column_("numeric", {array: true, nullable: false})
   balances!: (bigint)[]
@@ -46,14 +47,12 @@ export class StableSwap {
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
   adminFee!: bigint
 
-  @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-  withdrawFee!: bigint | undefined | null
-
   @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
   virtualPrice!: bigint
 
-  @Column_("bytea", {nullable: false})
-  owner!: Uint8Array
+  @Index_()
+  @ManyToOne_(() => StableSwapInfo, {nullable: true})
+  stableSwapInfo!: StableSwapInfo
 
   @OneToMany_(() => StableSwapEvent, e => e.stableSwap)
   events!: StableSwapEvent[]
@@ -68,11 +67,11 @@ export class StableSwap {
    * BigDecimal
    */
   @Column_("text", {nullable: false})
-  tvl!: string
+  tvlUSD!: string
 
   /**
    * BigDecimal
    */
   @Column_("text", {nullable: false})
-  volume!: string
+  volumeUSD!: string
 }

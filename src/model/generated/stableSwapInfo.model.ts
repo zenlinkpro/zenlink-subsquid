@@ -1,4 +1,5 @@
-import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
+import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, OneToMany as OneToMany_} from "typeorm"
+import {StableSwap} from "./stableSwap.model"
 
 @Entity_()
 export class StableSwapInfo {
@@ -26,4 +27,7 @@ export class StableSwapInfo {
 
   @Column_("int4", {nullable: false})
   txCount!: number
+
+  @OneToMany_(() => StableSwap, e => e.stableSwapInfo)
+  swaps!: StableSwap[]
 }

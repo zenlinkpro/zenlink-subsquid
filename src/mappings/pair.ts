@@ -19,7 +19,13 @@ import {
 } from "../model";
 import { convertTokenToDecimal, createLiquidityPosition } from "../utils/helpers";
 import { findEthPerToken, getEthPriceInUSD, MINIMUM_USD_THRESHOLD_NEW_PAIRS, WHITELIST } from "../utils/pricing";
-import { updatePairDayData, updatePairHourData, updateTokenDayData, updateZenlinkDayData } from "../utils/updates";
+import { 
+  updatePairDayData, 
+  updatePairHourData, 
+  updateTokenDayData, 
+  updateFactoryDayData, 
+  updateZenlinkInfo 
+} from "../utils/updates";
 
 const transferEventAbi = pairAbi.events['Transfer(address,address,uint256)']
 const syncEventAbi = pairAbi.events['Sync(uint112,uint112)']
@@ -453,15 +459,16 @@ export async function handleSwap(ctx: EvmLogHandlerContext<Store>): Promise<void
 
   const pairDayData = await updatePairDayData(ctx)
   const pairHourData = await updatePairHourData(ctx)
-  const zenlinkDayData = await updateZenlinkDayData(ctx)
+  const factoryDayData = await updateFactoryDayData(ctx)
   const token0DayData = await updateTokenDayData(ctx, token0)
   const token1DayData = await updateTokenDayData(ctx, token1)
+  await updateZenlinkInfo(ctx)
 
   // swap specific updating
-  zenlinkDayData.dailyVolumeUSD = BigDecimal(zenlinkDayData.dailyVolumeUSD).plus(trackedAmountUSD).toString()
-  zenlinkDayData.dailyVolumeETH = BigDecimal(zenlinkDayData.dailyVolumeETH).plus(trackedAmountETH).toString()
-  zenlinkDayData.dailyVolumeUntracked = BigDecimal(zenlinkDayData.dailyVolumeUntracked).plus(derivedAmountUSD).toString()
-  await ctx.store.save(zenlinkDayData)
+  factoryDayData.dailyVolumeUSD = BigDecimal(factoryDayData.dailyVolumeUSD).plus(trackedAmountUSD).toString()
+  factoryDayData.dailyVolumeETH = BigDecimal(factoryDayData.dailyVolumeETH).plus(trackedAmountETH).toString()
+  factoryDayData.dailyVolumeUntracked = BigDecimal(factoryDayData.dailyVolumeUntracked).plus(derivedAmountUSD).toString()
+  await ctx.store.save(factoryDayData)
 
   // swap specific updating for pair
   pairDayData.dailyVolumeToken0 = BigDecimal(pairDayData.dailyVolumeToken0).plus(amount0Total).toString()
@@ -547,7 +554,7 @@ export async function handleMint(ctx: EvmLogHandlerContext<Store>): Promise<void
   // update day entities
   await updatePairDayData(ctx)
   await updatePairHourData(ctx)
-  await updateZenlinkDayData(ctx)
+  await updateFactoryDayData(ctx)
   await updateTokenDayData(ctx, token0)
   await updateTokenDayData(ctx, token1)
 }
@@ -615,7 +622,7 @@ export async function handleBurn(ctx: EvmLogHandlerContext<Store>): Promise<void
   // update day entities
   await updatePairDayData(ctx)
   await updatePairHourData(ctx)
-  await updateZenlinkDayData(ctx)
+  await updateFactoryDayData(ctx)
   await updateTokenDayData(ctx, token0)
   await updateTokenDayData(ctx, token1)
 }

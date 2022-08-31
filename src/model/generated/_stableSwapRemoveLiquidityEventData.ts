@@ -6,7 +6,7 @@ export class StableSwapRemoveLiquidityEventData {
   private _provider!: Uint8Array
   private _tokenAmounts!: (bigint)[]
   private _fees!: (bigint)[] | undefined | null
-  private _lpTokenSupply!: bigint
+  private _lpTokenSupply!: bigint | undefined | null
 
   constructor(props?: Partial<Omit<StableSwapRemoveLiquidityEventData, 'toJSON'>>, json?: any) {
     Object.assign(this, props)
@@ -14,7 +14,7 @@ export class StableSwapRemoveLiquidityEventData {
       this._provider = marshal.bytes.fromJSON(json.provider)
       this._tokenAmounts = marshal.fromList(json.tokenAmounts, val => marshal.bigint.fromJSON(val))
       this._fees = json.fees == null ? undefined : marshal.fromList(json.fees, val => marshal.bigint.fromJSON(val))
-      this._lpTokenSupply = marshal.bigint.fromJSON(json.lpTokenSupply)
+      this._lpTokenSupply = json.lpTokenSupply == null ? undefined : marshal.bigint.fromJSON(json.lpTokenSupply)
     }
   }
 
@@ -44,12 +44,11 @@ export class StableSwapRemoveLiquidityEventData {
     this._fees = value
   }
 
-  get lpTokenSupply(): bigint {
-    assert(this._lpTokenSupply != null, 'uninitialized access')
+  get lpTokenSupply(): bigint | undefined | null {
     return this._lpTokenSupply
   }
 
-  set lpTokenSupply(value: bigint) {
+  set lpTokenSupply(value: bigint | undefined | null) {
     this._lpTokenSupply = value
   }
 
@@ -59,7 +58,7 @@ export class StableSwapRemoveLiquidityEventData {
       provider: marshal.bytes.toJSON(this.provider),
       tokenAmounts: this.tokenAmounts.map((val: any) => marshal.bigint.toJSON(val)),
       fees: this.fees == null ? undefined : this.fees.map((val: any) => marshal.bigint.toJSON(val)),
-      lpTokenSupply: marshal.bigint.toJSON(this.lpTokenSupply),
+      lpTokenSupply: this.lpTokenSupply == null ? undefined : marshal.bigint.toJSON(this.lpTokenSupply),
     }
   }
 }

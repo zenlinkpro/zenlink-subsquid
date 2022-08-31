@@ -1,8 +1,8 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_} from "typeorm"
 
 @Entity_()
-export class ZenlinkDayData {
-  constructor(props?: Partial<ZenlinkDayData>) {
+export class FactoryDayData {
+  constructor(props?: Partial<FactoryDayData>) {
     Object.assign(this, props)
   }
 
