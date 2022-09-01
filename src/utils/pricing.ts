@@ -1,10 +1,11 @@
-import { CommonHandlerContext } from "@subsquid/substrate-processor"
+import { CommonHandlerContext, decodeHex } from "@subsquid/substrate-processor"
 import { Store } from "@subsquid/typeorm-store"
 import { Big as BigDecimal } from 'big.js'
+import { Equal } from "typeorm"
 import { ONE_BD, ZERO_BD } from "../consts"
 import { getPair } from "../entities/pair"
 import { getOrCreateToken } from "../entities/token"
-import { Pair } from "../model"
+import { Pair, StableSwap } from "../model"
 
 export const WNATIVE = '0xaeaaf0e2c81af264101b9129c00f4440ccf0f720'.toLowerCase()
 export const USDC = '0x6a2d262d56735dba19dd70682b39f6be9a931d98'.toLowerCase()
@@ -36,7 +37,7 @@ export async function getEthPriceInUSD(ctx: CommonHandlerContext<Store>): Promis
  * @todo update to be derived ETH (plus stablecoin estimates)
  * */
 export async function findEthPerToken(
-  ctx: CommonHandlerContext<Store>, 
+  ctx: CommonHandlerContext<Store>,
   tokenId: string
 ): Promise<BigDecimal> {
   if (tokenId === WNATIVE) {
@@ -71,8 +72,24 @@ export async function findEthPerToken(
 }
 
 export async function findUSDPerToken(
-  ctx: CommonHandlerContext<Store>, 
+  ctx: CommonHandlerContext<Store>,
   tokenId: string
 ): Promise<BigDecimal> {
-  return (await getEthPriceInUSD(ctx)).mul(await findEthPerToken(ctx, tokenId))
+  const tokenUSDPrice = (await getEthPriceInUSD(ctx)).mul(await findEthPerToken(ctx, tokenId))
+  if (tokenUSDPrice.eq(ZERO_BD)) {
+    // check for stableSwap lpToken
+    const stableSwap = await ctx.store.findOneBy(StableSwap, {
+      lpToken: Equal(decodeHex(tokenId))
+    })
+    if (stableSwap) {
+      const { tokens } = stableSwap
+      let USDPrice = BigDecimal('0')
+      for (const token of tokens) {
+        if (USDPrice.gt(ZERO_BD)) break
+        USDPrice = await findUSDPerToken(ctx, token)
+      }
+      return USDPrice
+    }
+  }
+  return tokenUSDPrice
 }
