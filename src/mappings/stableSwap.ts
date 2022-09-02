@@ -16,7 +16,13 @@ import {
 import { getOrCreateToken } from "../entities/token";
 import { ZERO_BD } from "../consts";
 import { findUSDPerToken } from "../utils/pricing";
-import { updateStableDayData, updateStableSwapDayData, updateStableSwapInfo, updateZenlinkInfo } from "../utils/updates";
+import { 
+  updateStableDayData, 
+  updateStableSwapDayData, 
+  updateStableSwapInfo, 
+  updateStableSwapTvl, 
+  updateZenlinkInfo 
+} from "../utils/updates";
 
 export async function handleStableSwapNewFee(ctx: EvmLogHandlerContext<Store>): Promise<void> {
   const stableSwap = await getOrCreateStableSwap(ctx, ctx.event.args.address)
@@ -95,20 +101,7 @@ export async function handleStableSwapAddLiquidity(ctx: EvmLogHandlerContext<Sto
   const balances = await getBalancesSwap(ctx, ctx.event.args.address, stableSwap.numTokens)
   stableSwap.balances = balances
 
-  const { tokens } = stableSwap
-  let tvl: BigDecimal = BigDecimal('0')
-  let tokenUSDPrice = BigDecimal('0')
-  for (let i = 0; i < tokens.length; i++) {
-    tokenUSDPrice = tokenUSDPrice.gt(ZERO_BD)
-      ? tokenUSDPrice
-      : await findUSDPerToken(ctx, tokens[i])
-    const token = await getOrCreateToken(ctx, tokens[i])
-    const balance = balances[i]
-    const balanceDecimal: BigDecimal = BigDecimal(balance.toString()).div(10 ** token.decimals)
-    tvl = tvl.plus(balanceDecimal)
-  }
-  stableSwap.tvlUSD = tvl.mul(tokenUSDPrice).toString()
-  await ctx.store.save(stableSwap)
+  await updateStableSwapTvl(ctx, stableSwap)
   await updateStableSwapInfo(ctx)
   await updateStableSwapDayData(ctx, stableSwap)
   await updateStableDayData(ctx)
@@ -139,21 +132,7 @@ export async function handleStableSwapRemoveLiquidity(ctx: EvmLogHandlerContext<
   const balances = await getBalancesSwap(ctx, ctx.event.args.address, stableSwap.numTokens)
   stableSwap.balances = balances
 
-  const { tokens } = stableSwap
-  let tvl: BigDecimal = BigDecimal('0')
-  let tokenUSDPrice = BigDecimal('0')
-  for (let i = 0; i < tokens.length; i++) {
-    tokenUSDPrice = tokenUSDPrice.gt(ZERO_BD)
-      ? tokenUSDPrice
-      : await findUSDPerToken(ctx, tokens[i])
-    const token = await getOrCreateToken(ctx, tokens[i])
-    const balance = balances[i]
-    const balanceDecimal: BigDecimal = BigDecimal(balance.toString()).div(10 ** token.decimals)
-    tvl = tvl.plus(balanceDecimal)
-  }
-  stableSwap.tvlUSD = tvl.mul(tokenUSDPrice).toString()
-
-  await ctx.store.save(stableSwap)
+  await updateStableSwapTvl(ctx, stableSwap)
   await updateStableSwapInfo(ctx)
   await updateStableSwapDayData(ctx, stableSwap)
   await updateStableDayData(ctx)
@@ -182,21 +161,7 @@ export async function handleStableSwapRemoveLiquidityOne(ctx: EvmLogHandlerConte
   const balances = await getBalancesSwap(ctx, ctx.event.args.address, stableSwap.numTokens)
   stableSwap.balances = balances
 
-  const { tokens } = stableSwap
-  let tvl: BigDecimal = BigDecimal('0')
-  let tokenUSDPrice = BigDecimal('0')
-  for (let i = 0; i < tokens.length; i++) {
-    tokenUSDPrice = tokenUSDPrice.gt(ZERO_BD)
-      ? tokenUSDPrice
-      : await findUSDPerToken(ctx, tokens[i])
-    const token = await getOrCreateToken(ctx, tokens[i])
-    const balance = balances[i]
-    const balanceDecimal: BigDecimal = BigDecimal(balance.toString()).div(10 ** token.decimals)
-    tvl = tvl.plus(balanceDecimal)
-  }
-  stableSwap.tvlUSD = tvl.mul(tokenUSDPrice).toString()
-
-  await ctx.store.save(stableSwap)
+  await updateStableSwapTvl(ctx, stableSwap)
   await updateStableSwapInfo(ctx)
   await updateStableSwapDayData(ctx, stableSwap)
   await updateStableDayData(ctx)
@@ -233,21 +198,7 @@ export async function handleStableSwapRemoveLiquidityImbalance(ctx: EvmLogHandle
   const balances = await getBalancesSwap(ctx, ctx.event.args.address, stableSwap.numTokens)
   stableSwap.balances = balances
 
-  const { tokens } = stableSwap
-  let tvl: BigDecimal = BigDecimal('0')
-  let tokenUSDPrice = BigDecimal('0')
-  for (let i = 0; i < tokens.length; i++) {
-    tokenUSDPrice = tokenUSDPrice.gt(ZERO_BD)
-      ? tokenUSDPrice
-      : await findUSDPerToken(ctx, tokens[i])
-    const token = await getOrCreateToken(ctx, tokens[i])
-    const balance = balances[i]
-    const balanceDecimal: BigDecimal = BigDecimal(balance.toString()).div(10 ** token.decimals)
-    tvl = tvl.plus(balanceDecimal)
-  }
-  stableSwap.tvlUSD = tvl.mul(tokenUSDPrice).toString()
-
-  await ctx.store.save(stableSwap)
+  await updateStableSwapTvl(ctx, stableSwap)
   await updateStableSwapInfo(ctx)
   await updateStableSwapDayData(ctx, stableSwap)
   await updateStableDayData(ctx)

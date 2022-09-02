@@ -2,6 +2,7 @@ import { EvmLogHandlerContext } from "@subsquid/substrate-processor";
 import { Store } from "@subsquid/typeorm-store";
 import { Big as BigDecimal } from 'big.js'
 import { FACTORY_ADDRESS, ZERO_BD } from "../consts";
+import { getOrCreateToken } from "../entities/token";
 import { getStableSwapInfo, getZenlinkInfo } from "../entities/utils";
 import {
   Bundle,
@@ -19,6 +20,7 @@ import {
   ZenlinkDayInfo,
   ZenlinkInfo
 } from "../model";
+import { findUSDPerToken } from "./pricing";
 
 export async function updateFactoryDayData(ctx: EvmLogHandlerContext<Store>): Promise<FactoryDayData> {
   const factory = (await ctx.store.get(Factory, FACTORY_ADDRESS))!
@@ -133,6 +135,28 @@ export async function updateTokenDayData(
   tokenDayData.dailyTxns += 1
   await ctx.store.save(tokenDayData)
   return tokenDayData
+}
+
+export async function updateStableSwapTvl(
+  ctx: EvmLogHandlerContext<Store>,
+  stableSwap: StableSwap
+): Promise<StableSwap> {
+  const { tokens } = stableSwap
+  let tvl: BigDecimal = BigDecimal('0')
+  let tokenUSDPrice = BigDecimal('0')
+  for (let i = 0; i < tokens.length; i++) {
+    tokenUSDPrice = tokenUSDPrice.gt(ZERO_BD)
+      ? tokenUSDPrice
+      : await findUSDPerToken(ctx, tokens[i])
+    const token = await getOrCreateToken(ctx, tokens[i])
+    const balance = stableSwap.balances[i]
+    const balanceDecimal: BigDecimal = BigDecimal(balance.toString()).div(10 ** token.decimals)
+    tvl = tvl.plus(balanceDecimal)
+  }
+  stableSwap.tvlUSD = tvl.mul(tokenUSDPrice).toString()
+
+  await ctx.store.save(stableSwap)
+  return stableSwap
 }
 
 export async function updateStableSwapDayData(
