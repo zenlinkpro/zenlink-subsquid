@@ -10,7 +10,7 @@
     "typegen:abis": "node scripts/gen-abis.ts"
   },
   "dependencies": {
-    "@ethersproject/abi": "5.6.4",
+    "@ethersproject/abi": "5.7.0",
     "@subsquid/archive-registry": "1.0.12",
     "@subsquid/cli": "0.6.0",
     "@subsquid/evm-typegen": "1.3.0",
