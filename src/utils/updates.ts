@@ -60,6 +60,7 @@ export async function updatePairDayData(ctx: EvmLogHandlerContext<Store>): Promi
     pairDayData = new PairDayData({
       id: dayPairID,
       date: new Date(dayStartTimestamp),
+      pair,
       token0: pair.token0,
       token1: pair.token1,
       pairAddress: contractAddress,
