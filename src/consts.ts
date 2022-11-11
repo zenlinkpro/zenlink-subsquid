@@ -2,7 +2,7 @@ import { Big as BigDecimal } from 'big.js'
 
 export const knownContracts: ReadonlyArray<string> = []
 
-export const CHAIN_NODE = 'wss://astar.api.onfinality.io/public-ws'
+export const CHAIN_NODE = process.env.CHAIN_NODE || 'wss://astar.api.onfinality.io/public-ws'
 
 // need to be lowercase
 export const FACTORY_ADDRESS = '0x7bae21fb8408d534adfefcb46371c3576a1d5717'
