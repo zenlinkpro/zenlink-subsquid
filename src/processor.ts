@@ -21,12 +21,13 @@ import {
 
 const database = new TypeormDatabase()
 const processor = new SubstrateBatchProcessor()
-  .setBatchSize(100)
+  .setBatchSize(500)
   .setBlockRange({ from: 1424626 })
   .setDataSource({
     chain: CHAIN_NODE,
     archive: lookupArchive('astar', { release: "FireSquid" })
   })
+  .setTypesBundle('astar')
   .addEvmLog(FACTORY_ADDRESS, {
     filter: [factory.events['PairCreated(address,address,address,uint256)'].topic],
   })
