@@ -21,7 +21,6 @@ import {
 
 const database = new TypeormDatabase()
 const processor = new SubstrateBatchProcessor()
-  .setBatchSize(500)
   .setTypesBundle('astar')
   .setBlockRange({ from: 1424626 })
   .setDataSource({
