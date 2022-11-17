@@ -7,6 +7,7 @@ export const CHAIN_NODE = process.env.CHAIN_NODE || 'wss://astar.api.onfinality.
 // need to be lowercase
 export const FACTORY_ADDRESS = '0x7bae21fb8408d534adfefcb46371c3576a1d5717'
 export const FOUR_POOL = '0xb0fa056fffb74c0fb215f86d691c94ed45b686aa'
+export const FOUR_POOL_LP = '0x755cbac2246e8219e720591dd362a772076ab653'
 export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export const ZERO_BI = 0n
