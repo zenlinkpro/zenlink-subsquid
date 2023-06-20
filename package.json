@@ -24,7 +24,7 @@
     "dotenv": "16.0.3",
     "ethers": "5.7.2",
     "pg": "8.8.0",
-    "typeorm": "0.3.13"
+    "typeorm": "0.3.17"
   },
   "devDependencies": {
     "@subsquid/substrate-metadata-explorer": "1.1.2",
