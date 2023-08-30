@@ -12,7 +12,7 @@
   "dependencies": {
     "@ethersproject/abi": "5.7.0",
     "@subsquid/archive-registry": "2.1.10",
-    "@subsquid/cli": "2.2.1",
+    "@subsquid/cli": "2.4.4",
     "@subsquid/evm-typegen": "2.1.1",
     "@subsquid/graphql-server": "3.3.2",
     "@subsquid/ss58": "0.1.4",
